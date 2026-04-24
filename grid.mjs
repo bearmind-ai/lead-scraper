@@ -8,6 +8,10 @@ const CITY_COORDS = {
   "Frankfurt": { lat: 50.1109, lng: 8.6821 }
 };
 
+export function hasCity(city) {
+  return Object.prototype.hasOwnProperty.call(CITY_COORDS, city);
+}
+
 export function getCityCenter(city) {
   const coords = CITY_COORDS[city];
   if (!coords) {

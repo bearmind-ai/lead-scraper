@@ -23,6 +23,15 @@ export function sleep(ms) {
 }
 
 export async function textSearch(apiKey, query, location, radius) {
+  const body = { textQuery: query };
+  if (location) {
+    body.locationBias = {
+      circle: {
+        center: { latitude: location.lat, longitude: location.lng },
+        radius
+      }
+    };
+  }
   const res = await fetch(TEXT_SEARCH_URL, {
     method: "POST",
     headers: {
@@ -30,15 +39,7 @@ export async function textSearch(apiKey, query, location, radius) {
       "X-Goog-Api-Key": apiKey,
       "X-Goog-FieldMask": TEXT_SEARCH_FIELDS
     },
-    body: JSON.stringify({
-      textQuery: query,
-      locationBias: {
-        circle: {
-          center: { latitude: location.lat, longitude: location.lng },
-          radius
-        }
-      }
-    })
+    body: JSON.stringify(body)
   });
   if (!res.ok) {
     const body = await res.text();

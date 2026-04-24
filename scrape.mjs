@@ -1,4 +1,4 @@
-import { buildGrid } from "./grid.mjs";
+import { buildGrid, hasCity } from "./grid.mjs";
 import { textSearch, placeDetails, sleep } from "./places-api.mjs";
 
 const RATE_LIMIT_MS = 200;
@@ -9,25 +9,40 @@ export async function runScrape(searchTerm, city, maxLeads) {
     throw new Error("GOOGLE_MAPS_API_KEY not set");
   }
 
-  const cells = buildGrid(city);
   const seen = new Map();
+  const query = `${searchTerm} ${city}`;
 
-  for (const cell of cells) {
-    if (seen.size >= maxLeads * 2) break;
+  if (hasCity(city)) {
+    const cells = buildGrid(city);
+    for (const cell of cells) {
+      if (seen.size >= maxLeads * 2) break;
+      try {
+        const results = await textSearch(
+          apiKey,
+          query,
+          { lat: cell.lat, lng: cell.lng },
+          cell.radius
+        );
+        for (const r of results) {
+          if (r.id && !seen.has(r.id)) {
+            seen.set(r.id, r);
+          }
+        }
+      } catch (err) {
+        console.error(`textSearch failed for cell ${cell.lat},${cell.lng}: ${err.message}`);
+      }
+      await sleep(RATE_LIMIT_MS);
+    }
+  } else {
     try {
-      const results = await textSearch(
-        apiKey,
-        `${searchTerm} ${city}`,
-        { lat: cell.lat, lng: cell.lng },
-        cell.radius
-      );
+      const results = await textSearch(apiKey, query);
       for (const r of results) {
         if (r.id && !seen.has(r.id)) {
           seen.set(r.id, r);
         }
       }
     } catch (err) {
-      console.error(`textSearch failed for cell ${cell.lat},${cell.lng}: ${err.message}`);
+      console.error(`textSearch failed for "${query}": ${err.message}`);
     }
     await sleep(RATE_LIMIT_MS);
   }
