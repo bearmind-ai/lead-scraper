@@ -5,7 +5,7 @@ Serverless Lead-Scraper auf Basis der **Google Maps Places API (New)**. Liefert 
 ## Features
 
 - Reiner Node.js-Code (ES Modules), keine Frameworks, keine Build-Tools
-- Grid-basierte Suche (3x3 Rasterzellen) für höhere Abdeckung als eine einzelne Text-Search
+- **Weltweit nutzbar**: für hinterlegte Städte Grid-Suche (3x3 Rasterzellen) für höhere Abdeckung, für alle anderen Städte automatischer Fallback auf eine einzelne Text-Search
 - Dedupliziert über Place-IDs
 - Rate-Limiting zwischen API-Calls (200 ms)
 - Ein Codepfad — lokal (CLI) und Lambda (Handler) nutzen dieselbe `runScrape()`-Logik
@@ -70,11 +70,18 @@ Ausgabe: JSON-Array auf stdout.
 ]
 ```
 
-## Unterstützte Städte
+## Städte-Support
 
-Hardcodierte Stadt-Zentren: München, Berlin, Hamburg, Köln, Frankfurt.
+Der Scraper funktioniert **weltweit mit jeder Stadt**. Es gibt zwei Modi:
 
-Weitere Städte können in `grid.mjs` in der `CITY_COORDS`-Map ergänzt werden.
+| Modus | Wann | Verhalten |
+|-------|------|-----------|
+| **Grid-Suche** | Stadt ist in `CITY_COORDS` (`grid.mjs`) hinterlegt | 9 Text-Searches über ein 3x3-Raster rund um das Stadtzentrum — höhere Trefferzahl, bessere geografische Abdeckung |
+| **Fallback-Suche** | Stadt unbekannt | Eine einzelne Text-Search ohne Location-Bias — funktioniert für jede beliebige Stadt weltweit |
+
+Fest hinterlegte Städte (Grid-Suche): **München, Berlin, Hamburg, Köln, Frankfurt**.
+
+Zusätzliche Städte können in `grid.mjs` in der `CITY_COORDS`-Map mit Lat/Lng ergänzt werden, um sie vom Fallback in den Grid-Modus zu heben.
 
 ## Handler lokal testen
 
@@ -162,7 +169,7 @@ aws logs tail /aws/lambda/lead-scraper --follow
                                 │
                                 ▼
                     Google Places API (New)
-                    ├─ places:searchText  (Grid 3x3)
+                    ├─ places:searchText  (Grid 3x3 oder Fallback)
                     └─ places/{id}        (Details pro Lead)
 ```
 
