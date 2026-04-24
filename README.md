@@ -74,14 +74,32 @@ Ausgabe: JSON-Array auf stdout.
 
 Der Scraper funktioniert **weltweit mit jeder Stadt**. Es gibt zwei Modi:
 
-| Modus | Wann | Verhalten |
-|-------|------|-----------|
-| **Grid-Suche** | Stadt ist in `CITY_COORDS` (`grid.mjs`) hinterlegt | 9 Text-Searches über ein 3x3-Raster rund um das Stadtzentrum — höhere Trefferzahl, bessere geografische Abdeckung |
-| **Fallback-Suche** | Stadt unbekannt | Eine einzelne Text-Search ohne Location-Bias — funktioniert für jede beliebige Stadt weltweit |
+| Modus | Wann | Verhalten | Max. Leads pro Call |
+|-------|------|-----------|---------------------|
+| **Grid-Suche** | Stadt ist in `CITY_COORDS` (`grid.mjs`) hinterlegt | 9 Text-Searches über ein 3x3-Raster rund um das Stadtzentrum — höhere Trefferzahl, bessere geografische Abdeckung | bis ~180 |
+| **Fallback-Suche** | Stadt unbekannt | Text-Search ohne Location-Bias mit Pagination (bis zu 3 Seiten à 20 Places) — funktioniert für jede beliebige Stadt weltweit | bis 60 |
+
+Der Stadt-Lookup ist **case-insensitive** — `"Berlin"`, `"berlin"` und `"BERLIN"` lösen alle den Grid-Modus aus.
 
 Fest hinterlegte Städte (Grid-Suche): **München, Berlin, Hamburg, Köln, Frankfurt**.
 
 Zusätzliche Städte können in `grid.mjs` in der `CITY_COORDS`-Map mit Lat/Lng ergänzt werden, um sie vom Fallback in den Grid-Modus zu heben.
+
+### Beispiele weltweit
+
+```bash
+# Grid-Modus (Deutschland)
+node index.mjs "Zahnarzt" "München" 10
+
+# Fallback-Modus (Schweiz)
+node index.mjs "Fitnessstudio" "Zürich" 10
+
+# Fallback-Modus (Japan)
+node index.mjs "Cafe" "Tokyo" 5
+
+# Fallback-Modus (USA)
+node index.mjs "Coffee Shop" "New York" 10
+```
 
 ## Handler lokal testen
 

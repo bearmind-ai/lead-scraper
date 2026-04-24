@@ -5,7 +5,8 @@ const TEXT_SEARCH_FIELDS = [
   "places.id",
   "places.displayName",
   "places.formattedAddress",
-  "places.rating"
+  "places.rating",
+  "nextPageToken"
 ].join(",");
 
 const DETAILS_FIELDS = [
@@ -22,7 +23,7 @@ export function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-export async function textSearch(apiKey, query, location, radius) {
+export async function textSearch(apiKey, query, { location, radius, pageToken } = {}) {
   const body = { textQuery: query };
   if (location) {
     body.locationBias = {
@@ -31,6 +32,9 @@ export async function textSearch(apiKey, query, location, radius) {
         radius
       }
     };
+  }
+  if (pageToken) {
+    body.pageToken = pageToken;
   }
   const res = await fetch(TEXT_SEARCH_URL, {
     method: "POST",
@@ -42,11 +46,14 @@ export async function textSearch(apiKey, query, location, radius) {
     body: JSON.stringify(body)
   });
   if (!res.ok) {
-    const body = await res.text();
-    throw new Error(`textSearch HTTP ${res.status}: ${body}`);
+    const errBody = await res.text();
+    throw new Error(`textSearch HTTP ${res.status}: ${errBody}`);
   }
   const data = await res.json();
-  return data.places || [];
+  return {
+    places: data.places || [],
+    nextPageToken: data.nextPageToken || null
+  };
 }
 
 export async function placeDetails(apiKey, placeId) {

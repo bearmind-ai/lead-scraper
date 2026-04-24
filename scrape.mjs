@@ -17,13 +17,11 @@ export async function runScrape(searchTerm, city, maxLeads) {
     for (const cell of cells) {
       if (seen.size >= maxLeads * 2) break;
       try {
-        const results = await textSearch(
-          apiKey,
-          query,
-          { lat: cell.lat, lng: cell.lng },
-          cell.radius
-        );
-        for (const r of results) {
+        const { places } = await textSearch(apiKey, query, {
+          location: { lat: cell.lat, lng: cell.lng },
+          radius: cell.radius
+        });
+        for (const r of places) {
           if (r.id && !seen.has(r.id)) {
             seen.set(r.id, r);
           }
@@ -34,17 +32,24 @@ export async function runScrape(searchTerm, city, maxLeads) {
       await sleep(RATE_LIMIT_MS);
     }
   } else {
-    try {
-      const results = await textSearch(apiKey, query);
-      for (const r of results) {
-        if (r.id && !seen.has(r.id)) {
-          seen.set(r.id, r);
+    let pageToken = null;
+    for (let page = 0; page < 3; page++) {
+      if (seen.size >= maxLeads) break;
+      try {
+        const { places, nextPageToken } = await textSearch(apiKey, query, { pageToken });
+        for (const r of places) {
+          if (r.id && !seen.has(r.id)) {
+            seen.set(r.id, r);
+          }
         }
+        if (!nextPageToken) break;
+        pageToken = nextPageToken;
+      } catch (err) {
+        console.error(`textSearch failed for "${query}" (page ${page}): ${err.message}`);
+        break;
       }
-    } catch (err) {
-      console.error(`textSearch failed for "${query}": ${err.message}`);
+      await sleep(RATE_LIMIT_MS);
     }
-    await sleep(RATE_LIMIT_MS);
   }
 
   const leads = [];

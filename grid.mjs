@@ -8,12 +8,17 @@ const CITY_COORDS = {
   "Frankfurt": { lat: 50.1109, lng: 8.6821 }
 };
 
+const CITY_LOOKUP = Object.fromEntries(
+  Object.entries(CITY_COORDS).map(([k, v]) => [k.toLowerCase(), v])
+);
+
 export function hasCity(city) {
-  return Object.prototype.hasOwnProperty.call(CITY_COORDS, city);
+  if (typeof city !== "string") return false;
+  return Object.prototype.hasOwnProperty.call(CITY_LOOKUP, city.toLowerCase());
 }
 
 export function getCityCenter(city) {
-  const coords = CITY_COORDS[city];
+  const coords = typeof city === "string" ? CITY_LOOKUP[city.toLowerCase()] : undefined;
   if (!coords) {
     throw new Error(`Unknown city: ${city}. Known: ${Object.keys(CITY_COORDS).join(", ")}`);
   }
